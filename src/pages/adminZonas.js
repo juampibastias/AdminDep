@@ -46,7 +46,7 @@ const AdminPage = () => {
 
   return (
     <div>
-      <h1>Administración de Zonas a Depilar</h1>
+      <h1 className="mt-5">Administración de Zonas a Depilar</h1>
       <div className="col-md-4">
           <Link href="/adminDep">
             <span className="btn btn-primary btn-block mb-3">
@@ -90,7 +90,7 @@ const AdminPage = () => {
 
         <button type="submit">Agregar Zona</button>
       </form>
-      <table>
+      <table style={{textAlign: "center", marginTop: "3rem", display: "block", justifyContent: "space-around"}}>
         <thead>
           <tr>
             <th>Zona</th>

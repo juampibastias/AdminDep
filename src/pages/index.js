@@ -2,9 +2,10 @@ import Head from "next/head";
 import Image from "next/image";
 import Formulario from "../../components/FormularioTurno";
 import Zona from "../../models/zona";
+import Fecha from "../../models/fecha";
 import { connectToDatabase } from "../../utils/db";
 
-const Home = ({ zonasDepilar }) => {
+const Home = ({ zonasDepilar, fechasDisponibles }) => {
   return (
     <>
       <Head>
@@ -26,7 +27,10 @@ const Home = ({ zonasDepilar }) => {
         </div>
         <div>
           {" "}
-          <Formulario zonasDepilar={zonasDepilar} />
+          <Formulario
+            zonasDepilar={zonasDepilar}
+            fechasDisponibles={fechasDisponibles}
+          />
         </div>
       </main>
     </>
@@ -36,9 +40,13 @@ const Home = ({ zonasDepilar }) => {
 export async function getServerSideProps() {
   await connectToDatabase();
   const zonasDepilar = await Zona.find({});
+  const fechasDisponibles = await Fecha.find({});
 
   return {
-    props: { zonasDepilar: JSON.parse(JSON.stringify(zonasDepilar)) },
+    props: {
+      zonasDepilar: JSON.parse(JSON.stringify(zonasDepilar)),
+      fechasDisponibles: JSON.parse(JSON.stringify(fechasDisponibles)),
+    },
   };
 }
 
