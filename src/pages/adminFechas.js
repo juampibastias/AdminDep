@@ -9,13 +9,15 @@ const AdminPage = () => {
   const [fechasGuardadas, setFechasGuardadas] = useState([]);
 
   useEffect(() => {
-    console.log(fechasGuardadas)
+    fetchFechas();
+  }, []);
+
+  const fetchFechas = () => {
     fetch("/api/fechas/[id]")
       .then((response) => response.json())
-      .then((data) => {
-        console.log(data)
-        setFechasGuardadas(data)});
-  }, []);
+      .then((data) => setFechasGuardadas(data))
+      .catch((error) => console.error("Error al obtener las fechas", error));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,10 +41,13 @@ const AdminPage = () => {
       setDesde("");
       setHasta("");
 
-      const nuevaFecha = await response.json();
-      setFechasGuardadas([...fechasGuardadas, nuevaFecha]);
+      // Llamar explícitamente a fetchFechas para sincronizar el estado local con la API
+      fetchFechas();
 
       alert("Fecha agregada correctamente");
+
+      // Recargar la página después de mostrar el mensaje de alerta
+      window.location.reload();
     } catch (error) {
       console.error("Error al agregar la fecha", error);
       alert("Error al agregar la fecha");
@@ -50,7 +55,6 @@ const AdminPage = () => {
   };
 
   const handleDeleteFecha = async (id) => {
-    console.log("Eliminar fecha con ID:", id);
     try {
       const response = await fetch(`/api/fechas/${id}`, {
         method: "DELETE",
@@ -76,12 +80,10 @@ const AdminPage = () => {
     <div>
       <h1>Administración de Fechas</h1>
       <div className="col-md-4">
-          <Link href="/adminDep">
-            <span className="btn btn-primary btn-block mb-3">
-              Volver
-            </span>
-          </Link>
-        </div>
+        <Link href="/adminDep">
+          <span className="btn btn-primary btn-block mb-3">Volver</span>
+        </Link>
+      </div>
       <form onSubmit={handleSubmit}>
         <div>
           <label htmlFor="desde">Desde:</label>

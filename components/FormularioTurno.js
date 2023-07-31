@@ -1,26 +1,62 @@
 import React, { useState } from "react";
 
 const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
-  console.log("fechas: ", fechasDisponibles);
-
-  // Estado para almacenar las selecciones realizadas
   const [selecciones, setSelecciones] = useState([]);
 
-  // Función para manejar la selección de una zona
   const handleSeleccion = (e) => {
     const zonaSeleccionada = e.target.value;
     setSelecciones((prevSelecciones) => [...prevSelecciones, zonaSeleccionada]);
   };
 
-  // Función para eliminar una selección
   const eliminarSeleccion = (index) => {
     setSelecciones((prevSelecciones) =>
       prevSelecciones.filter((_, i) => i !== index)
     );
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    const nombre = e.target.nombre.value;
+    const apellido = e.target.apellido.value;
+    const fechaDisponible = e.target.fechasDisponibles.value;
+    const zonasDepilar = selecciones;
+
+    const reservaData = {
+      nombre,
+      apellido,
+      fechaDisponible,
+      zonasDepilar,
+    };
+
+    try {
+      const response = await fetch("/api/reserva/[id]", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(reservaData),
+      });
+
+      if (!response.ok) {
+        const { message } = await response.json();
+        throw new Error(message);
+      }
+
+      const reservaGuardada = await response.json();
+      console.log("Reserva guardada:", reservaGuardada);
+      alert("¡Reserva exitosa!");
+
+      setSelecciones([]);
+      e.target.reset();
+    } catch (error) {
+      console.error("Error al guardar la reserva", error);
+      alert("Error al guardar la reserva. Por favor, intenta nuevamente.");
+    }
+  };
+
   return (
-    <form>
+    <form onSubmit={handleSubmit}>
       <div>
         <label htmlFor="nombre">Nombre:</label>
         <input type="text" id="nombre" name="nombre" required />
@@ -52,7 +88,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
           id="zonasDepilar"
           name="zonasDepilar"
           required
-          onChange={handleSeleccion} // Manejar la selección de la zona
+          onChange={handleSeleccion}
         >
           <option value="">Selecciona una zona</option>
           {zonasDepilar.map((zona) => (
@@ -63,7 +99,6 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
         </select>
       </div>
 
-      {/* Mostrar las selecciones realizadas */}
       <div>
         <h3>Selecciones realizadas:</h3>
         <ul>
@@ -81,7 +116,6 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
   );
 };
 
-// Función para formatear la fecha en "dd/mm/aaaa"
 function formatDate(dateString) {
   const dateObj = new Date(dateString);
   return dateObj.toLocaleDateString("es-ES");
