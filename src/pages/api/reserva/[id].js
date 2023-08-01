@@ -9,9 +9,9 @@ export default async function handler(req, res) {
 
   try {
     // Obtener los datos de la reserva del cuerpo de la solicitud
-    const { nombre, apellido, fechaDisponible, zonasDepilar } = req.body;
+    const { nombre, apellido, fechaDisponible, zonasDepilar, precioAcumulado, tiempoAcumulado } = req.body;
 
-    if (!nombre || !apellido || !fechaDisponible || !zonasDepilar) {
+    if (!nombre || !apellido || !fechaDisponible || !zonasDepilar || !precioAcumulado || !tiempoAcumulado) {
       return res.status(400).json({ message: "Faltan datos requeridos" });
     }
 
@@ -23,6 +23,8 @@ export default async function handler(req, res) {
       apellido,
       fechaDisponible,
       zonasDepilar,
+      precioAcumulado,
+      tiempoAcumulado
     });
 
     // Guardar la reserva en la base de datos

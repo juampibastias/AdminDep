@@ -6,6 +6,24 @@ import Fecha from "../../models/fecha";
 import { connectToDatabase } from "../../utils/db";
 
 const Home = ({ zonasDepilar, fechasDisponibles }) => {
+  const eventos = [
+    {
+      _id: "1",
+      titulo: "Evento 1",
+      fecha: "2023-08-10T09:00:00.000Z",
+    },
+    {
+      _id: "2",
+      titulo: "Evento 2",
+      fecha: "2023-08-15T14:30:00.000Z",
+    },
+    {
+      _id: "3",
+      titulo: "Evento 3",
+      fecha: "2023-08-20T11:45:00.000Z",
+    },
+  ];
+  
   return (
     <>
       <Head>

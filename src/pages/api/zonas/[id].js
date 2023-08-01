@@ -1,4 +1,5 @@
 import { connectToDatabase } from "../../../../utils/db";
+import Reserva from "../../../../models/reserva"; // Importamos el modelo Reserva
 import Zona from "../../../../models/zona";
 
 export default async function handler(req, res) {
@@ -15,20 +16,34 @@ export default async function handler(req, res) {
     try {
       await connectToDatabase();
 
-      const { zona, tiempo, precio } = req.body;
+      const { nombre, apellido, fechaDisponible, zonasDepilar } = req.body;
 
-      const nuevaZona = new Zona({
-        zona,
-        tiempo,
-        precio,
+      // Calcular precio y tiempo acumulado
+      let precioAcumulado = 0;
+      let tiempoAcumulado = 0;
+      for (const zonaSeleccionada of zonasDepilar) {
+        const [, precio, tiempo] = zonaSeleccionada.split(" | ");
+        precioAcumulado += parseInt(precio);
+        tiempoAcumulado += parseInt(tiempo);
+      }
+
+      // Creamos una nueva instancia del modelo Reserva con los datos recibidos y el acumulado
+      const nuevaReserva = new Reserva({
+        nombre,
+        apellido,
+        fechaDisponible,
+        zonasDepilar,
+        precioAcumulado,
+        tiempoAcumulado,
       });
 
-      await nuevaZona.save();
+      // Guardamos la reserva en la base de datos
+      await nuevaReserva.save();
 
-      return res.status(200).json({ message: "Zona agregada correctamente" });
+      return res.status(200).json({ message: "Reserva guardada correctamente" });
     } catch (error) {
-      console.error("Error al agregar la zona", error);
-      return res.status(500).json({ message: "Error al agregar la zona" });
+      console.error("Error al guardar la reserva", error);
+      return res.status(500).json({ message: "Error al guardar la reserva" });
     }
   } else if (req.method === "DELETE") {
     try {

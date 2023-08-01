@@ -5,8 +5,10 @@ const reservaSchema = new mongoose.Schema({
   apellido: { type: String, required: true },
   fechaDisponible: { type: String, required: true },
   zonasDepilar: [{ type: String, required: true }],
+  precioAcumulado: { type: Number, required: true }, // Nuevo campo para precio acumulado
+  tiempoAcumulado: { type: Number, required: true }, // Nuevo campo para tiempo acumulado
 });
 
-const Reserva = mongoose.model("Reserva", reservaSchema);
+const Reserva = mongoose.models.Reserva || mongoose.model("Reserva", fechaSchema);
 
 export default Reserva;

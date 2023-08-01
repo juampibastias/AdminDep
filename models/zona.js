@@ -6,7 +6,7 @@ const zonaSchema = new mongoose.Schema({
     required: true,
   },
   tiempo: {
-    type: String,
+    type: Number,
     required: true,
   },
   precio: {
