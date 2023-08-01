@@ -2,16 +2,42 @@ import { connectToDatabase } from "../../../../utils/db";
 import Reserva from "../../../../models/reserva";
 
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
+  if (req.method === "GET") {
+    try {
+      await connectToDatabase(); // Conexión a la base de datos
+
+      // Buscar todas las reservas en la base de datos
+      const reservas = await Reserva.find({});
+
+      return res.status(200).json(reservas);
+    } catch (error) {
+      console.error("Error al obtener las reservas", error);
+      return res.status(500).json({ message: "Error al obtener las reservas" });
+    }
+  } else if (req.method !== "POST") {
     // Asegurarse de que solo se acepten solicitudes POST
     return res.status(405).json({ message: "Método no permitido" });
   }
 
   try {
     // Obtener los datos de la reserva del cuerpo de la solicitud
-    const { nombre, apellido, fechaDisponible, zonasDepilar, precioAcumulado, tiempoAcumulado } = req.body;
+    const {
+      nombre,
+      apellido,
+      fechaDisponible,
+      zonasDepilar,
+      precioAcumulado,
+      tiempoAcumulado,
+    } = req.body;
 
-    if (!nombre || !apellido || !fechaDisponible || !zonasDepilar || !precioAcumulado || !tiempoAcumulado) {
+    if (
+      !nombre ||
+      !apellido ||
+      !fechaDisponible ||
+      !zonasDepilar ||
+      !precioAcumulado ||
+      !tiempoAcumulado
+    ) {
       return res.status(400).json({ message: "Faltan datos requeridos" });
     }
 
@@ -24,7 +50,7 @@ export default async function handler(req, res) {
       fechaDisponible,
       zonasDepilar,
       precioAcumulado,
-      tiempoAcumulado
+      tiempoAcumulado,
     });
 
     // Guardar la reserva en la base de datos

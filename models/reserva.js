@@ -9,6 +9,6 @@ const reservaSchema = new mongoose.Schema({
   tiempoAcumulado: { type: Number, required: true }, // Nuevo campo para tiempo acumulado
 });
 
-const Reserva = mongoose.models.Reserva || mongoose.model("Reserva", fechaSchema);
+const Reserva = mongoose.models.Reserva || mongoose.model("Reserva", reservaSchema);
 
 export default Reserva;

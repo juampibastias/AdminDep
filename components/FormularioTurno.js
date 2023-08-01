@@ -122,9 +122,9 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
           {fechasDisponibles.map((fecha) => (
             <option
               key={fecha._id}
-              value={`${formatDate(fecha.desde)} - ${formatDate(fecha.hasta)}`}
+              value={`${formatDate(fecha.dia)}`}
             >
-              {`${formatDate(fecha.desde)} - ${formatDate(fecha.hasta)}`}
+              {`${formatDate(fecha.dia)}`}
             </option>
           ))}
         </select>
@@ -139,6 +139,25 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
           onChange={handleSeleccion}
         >
           <option value="">Selecciona una zona</option>
+          {zonasDepilar.map((zona) => (
+            <option
+              key={zona._id}
+              value={`${zona.zona} | ${zona.precio} | ${zona.tiempo}`}
+            >
+              {`${zona.zona} $${zona.precio} ${zona.tiempo}''`}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label htmlFor="zonasDepilar">Horarios disponibles</label>
+        <select
+          id="zonasDepilar"
+          name="zonasDepilar"
+          required
+          onChange={handleSeleccion}
+        >
+          <option value="">Selecciona un horario</option>
           {zonasDepilar.map((zona) => (
             <option
               key={zona._id}

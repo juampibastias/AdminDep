@@ -1,12 +1,16 @@
 import mongoose from "mongoose";
 
 const fechaSchema = new mongoose.Schema({
-  desde: {
+  dia: {
     type: Date,
     required: true,
   },
-  hasta: {
-    type: Date,
+  horaInicio: {
+    type: String,
+    required: true,
+  },
+  horaFin: {
+    type: String,
     required: true,
   },
 });

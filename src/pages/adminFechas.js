@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { FaTrash } from "react-icons/fa";
 import Link from "next/link";
 
 const AdminPage = () => {
-  const [desde, setDesde] = useState("");
-  const [hasta, setHasta] = useState("");
+  const [dia, setDia] = useState("");
+  const [horaInicio, setHoraInicio] = useState(""); // Estado para almacenar la hora de inicio
+  const [horaFin, setHoraFin] = useState(""); // Estado para almacenar la hora de fin
   const [fechasGuardadas, setFechasGuardadas] = useState([]);
 
   useEffect(() => {
@@ -18,7 +19,6 @@ const AdminPage = () => {
       .then((data) => setFechasGuardadas(data))
       .catch((error) => console.error("Error al obtener las fechas", error));
   };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -29,8 +29,9 @@ const AdminPage = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          desde,
-          hasta,
+          dia,
+          horaInicio, // Usar el estado de horaInicio
+          horaFin, // Usar el estado de horaFin
         }),
       });
 
@@ -38,8 +39,7 @@ const AdminPage = () => {
         throw new Error("Error al agregar la fecha");
       }
 
-      setDesde("");
-      setHasta("");
+      setDia("");
 
       // Llamar explícitamente a fetchFechas para sincronizar el estado local con la API
       fetchFechas();
@@ -86,23 +86,32 @@ const AdminPage = () => {
       </div>
       <form onSubmit={handleSubmit}>
         <div>
-          <label htmlFor="desde">Desde:</label>
+          <label htmlFor="dia">Día:</label>
           <input
             type="date"
-            id="desde"
-            value={desde}
-            onChange={(e) => setDesde(e.target.value)}
+            id="dia"
+            value={dia}
+            onChange={(e) => setDia(e.target.value)}
             required
           />
         </div>
-
         <div>
-          <label htmlFor="hasta">Hasta:</label>
+          <label htmlFor="inicio">Hora Inicio:</label>
           <input
-            type="date"
-            id="hasta"
-            value={hasta}
-            onChange={(e) => setHasta(e.target.value)}
+            type="time"
+            id="inicio"
+            value={horaInicio}
+            onChange={(e) => setHoraInicio(e.target.value)} // Actualizar el estado de horaInicio
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="fin">Hora Fin:</label>
+          <input
+            type="time"
+            id="fin"
+            value={horaFin}
+            onChange={(e) => setHoraFin(e.target.value)} // Actualizar el estado de horaFin
             required
           />
         </div>
@@ -114,16 +123,10 @@ const AdminPage = () => {
         <ul>
           {fechasGuardadas.map((fecha) => (
             <li key={fecha._id}>
-              {`${format(new Date(fecha.desde), "dd/MM/yyyy")} - ${format(
-                new Date(fecha.hasta),
-                "dd/MM/yyyy"
-              )}`}
-              <button
-                onClick={() => handleDeleteFecha(fecha._id)}
-                style={{ marginLeft: "10px" }}
-              >
-                <FaTrash />
-              </button>
+              {`${format(new Date(fecha.dia), "dd/MM/yyyy")} | Inicia: ${
+                fecha.horaInicio
+              } Finaliza: ${fecha.horaFin}`}
+              {/* Resto del código sin cambios */}
             </li>
           ))}
         </ul>
