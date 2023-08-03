@@ -1,33 +1,88 @@
-import React from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import React, { useState } from "react";
+import { format, parseISO, addMinutes } from "date-fns";
+import Link from "next/link";
 
-const localizer = momentLocalizer(moment);
+const AgendaCalendar = ({ diasDisponibles }) => {
+  const [expandedDay, setExpandedDay] = useState(null);
 
-const Agenda = ({ events }) => {
-  const eventStyleGetter = (event) => {
-    // Aquí definimos las clases CSS para los eventos disponibles
-    if (event.disponible) {
-      return {
-        className: 'disponible', // Clase CSS "disponible" para resaltar los eventos disponibles
-      };
+  // Función para generar los intervalos de 15 minutos
+  const generateTimeSlots = (horaInicio, horaFin) => {
+    const timeSlots = [];
+    const interval = 15;
+
+    const startTime = parseISO(`2023-01-01T${horaInicio}`);
+    const endTime = parseISO(`2023-01-01T${horaFin}`);
+
+    let currentTime = startTime;
+
+    while (currentTime <= endTime) {
+      timeSlots.push(currentTime);
+      currentTime = addMinutes(currentTime, interval);
     }
-    return {};
+
+    return timeSlots;
   };
 
+  // Función para manejar el clic en un día
+  const handleDayClick = (diaId) => {
+    if (expandedDay === diaId) {
+      // Si el día ya está expandido, lo colapsamos al hacer clic nuevamente
+      setExpandedDay(null);
+    } else {
+      // Si el día no está expandido, lo marcamos como expandido
+      setExpandedDay(diaId);
+    }
+  };
+
+  // Ordenar las fechas por orden cronológico
+  diasDisponibles.sort((a, b) => new Date(a.dia) - new Date(b.dia));
+
   return (
-    <div style={{ height: '500px' }}>
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        eventPropGetter={eventStyleGetter} // Asignamos la función eventStyleGetter para personalizar el estilo de los eventos
-        style={{ width: '100%', height: '100%' }}
-      />
+    <div>
+      <h2 style={{ marginBottom: "10px" }}>Agenda</h2>
+      <Link href="/adminDep">
+        <span className="btn btn-primary btn-block mb-3">Volver</span>
+      </Link>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(7, 1fr)",
+          gap: "10px",
+        }}
+      >
+        {/* Renderizar las fechas */}
+        {diasDisponibles.map((diaDisponible) => (
+          <div
+            key={diaDisponible._id}
+            style={{
+              border: "1px solid #ddd",
+              padding: "10px",
+              cursor: "pointer",
+              background:
+                expandedDay === diaDisponible._id ? "#f0f0f0" : "transparent",
+            }}
+            onClick={() => handleDayClick(diaDisponible._id)}
+          >
+            <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              {format(parseISO(diaDisponible.dia), "dd-MM-yyyy")}
+            </div>
+            {expandedDay === diaDisponible._id && (
+              <div>
+                {generateTimeSlots(
+                  diaDisponible.horaInicio,
+                  diaDisponible.horaFin
+                ).map((timeSlot) => (
+                  <div key={timeSlot.toISOString()}>
+                    {format(timeSlot, "HH:mm")}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default Agenda;
+export default AgendaCalendar;
