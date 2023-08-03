@@ -2,12 +2,13 @@ import React from "react";
 import Agenda from "../../components/Agenda";
 import Fecha from "../../models/fecha";
 import { connectToDatabase } from "../../utils/db";
+import Reserva from "../../models/reserva";
 
-const MyPage = ({ diasDisponibles }) => {
-  console.log(diasDisponibles)
+const MyPage = ({ diasDisponibles, reservas }) => {
+  console.log(diasDisponibles, reservas)
   return (
     <div>
-      <Agenda diasDisponibles={diasDisponibles} />
+      <Agenda diasDisponibles={diasDisponibles} reservas = {reservas}/>
     </div>
   );
 };
@@ -15,10 +16,12 @@ const MyPage = ({ diasDisponibles }) => {
 export async function getServerSideProps() {
   await connectToDatabase
   const diasDisponibles = await Fecha.find({})
+  const reservas = await Reserva.find({})
   return {
     props: {
       diasDisponibles: JSON.parse(JSON.stringify(diasDisponibles)),
-    },
+      reservas: JSON.parse(JSON.stringify(reservas)),
+    }
   };
 }
 

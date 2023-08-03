@@ -13,6 +13,10 @@ const fechaSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  fraccionamientoArray: {
+    type: [String], 
+    required: true,
+  },
 });
 
 const Fecha = mongoose.models.Fecha || mongoose.model("Fecha", fechaSchema);

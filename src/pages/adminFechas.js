@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { FaTrash } from "react-icons/fa";
 import Link from "next/link";
 
 const AdminPage = () => {
   const [dia, setDia] = useState("");
-  const [horaInicio, setHoraInicio] = useState(""); // Estado para almacenar la hora de inicio
-  const [horaFin, setHoraFin] = useState(""); // Estado para almacenar la hora de fin
+  const [horaInicio, setHoraInicio] = useState("");
+  const [horaFin, setHoraFin] = useState("");
+  const [fraccionamiento, setFraccionamiento] = useState("15");
   const [fechasGuardadas, setFechasGuardadas] = useState([]);
 
   useEffect(() => {
@@ -19,10 +20,31 @@ const AdminPage = () => {
       .then((data) => setFechasGuardadas(data))
       .catch((error) => console.error("Error al obtener las fechas", error));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Calcular el fraccionamiento de horas
+      const intervaloEnMinutos = parseInt(fraccionamiento, 10);
+      const fraccionamientoEnMilisegundos = intervaloEnMinutos * 60000;
+      const startDate = new Date(`${dia}T${horaInicio}`);
+      const endDate = new Date(`${dia}T${horaFin}`);
+
+      const fraccionamientoArray = [];
+      while (startDate <= endDate) {
+        fraccionamientoArray.push(
+          startDate.toLocaleTimeString("en-GB", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false,
+          })
+        );
+        startDate.setTime(startDate.getTime() + fraccionamientoEnMilisegundos);
+      }
+
+      console.log(fraccionamientoArray)
+
       const response = await fetch("/api/fechas/[id]", {
         method: "POST",
         headers: {
@@ -30,8 +52,9 @@ const AdminPage = () => {
         },
         body: JSON.stringify({
           dia,
-          horaInicio, // Usar el estado de horaInicio
-          horaFin, // Usar el estado de horaFin
+          horaInicio,
+          horaFin,
+          fraccionamientoArray,
         }),
       });
 
@@ -40,14 +63,13 @@ const AdminPage = () => {
       }
 
       setDia("");
+      setHoraInicio("");
+      setHoraFin("");
 
       // Llamar explícitamente a fetchFechas para sincronizar el estado local con la API
       fetchFechas();
 
       alert("Fecha agregada correctamente");
-
-      // Recargar la página después de mostrar el mensaje de alerta
-      window.location.reload();
     } catch (error) {
       console.error("Error al agregar la fecha", error);
       alert("Error al agregar la fecha");
@@ -115,6 +137,16 @@ const AdminPage = () => {
             required
           />
         </div>
+        <div>
+          <label htmlFor="fraccionamiento">Fraccionamiento en minutos:</label>
+          <input
+            type="number"
+            id="fraccionamiento"
+            value={fraccionamiento}
+            onChange={(e) => setFraccionamiento(e.target.value)}
+            required
+          />
+        </div>
 
         <button type="submit">Agregar Fecha</button>
       </form>
@@ -126,7 +158,10 @@ const AdminPage = () => {
               {`${format(new Date(fecha.dia), "dd/MM/yyyy")} | Inicia: ${
                 fecha.horaInicio
               } Finaliza: ${fecha.horaFin}`}
-              {/* Resto del código sin cambios */}
+              <FaTrash
+                className="delete-icon"
+                onClick={() => handleDeleteFecha(fecha._id)}
+              />
             </li>
           ))}
         </ul>

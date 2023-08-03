@@ -1,8 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { format, parseISO, addMinutes } from "date-fns";
+import Link from "next/link";
 
 const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
   const [selecciones, setSelecciones] = useState([]);
   const [sumaAcumulada, setSumaAcumulada] = useState({ precio: 0, tiempo: 0 });
+  const [horariosDisponibles, setHorariosDisponibles] = useState([]);
+
+  useEffect(() => {
+    // Filtrar las fechas disponibles en base al tiempo acumulado
+    const horarios = fechasDisponibles.filter((fecha) => {
+      const tiempoDisponible = calcularTiempoDisponible(
+        fecha.horaInicio,
+        fecha.horaFin
+      );
+      return tiempoDisponible >= sumaAcumulada.tiempo;
+    });
+    setHorariosDisponibles(horarios);
+  }, [sumaAcumulada, fechasDisponibles]);
 
   const handleSeleccion = (e) => {
     const zonaSeleccionada = e.target.value;
@@ -50,12 +65,11 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    const fechaDisponible = e.target.fechasDisponibles.value;
     const nombre = e.target.nombre.value;
     const apellido = e.target.apellido.value;
-    const fechaDisponible = e.target.fechasDisponibles.value;
     const zonasDepilar = selecciones;
-  
+
     // Calcular precio y tiempo acumulado
     let precioAcumulado = 0;
     let tiempoAcumulado = 0;
@@ -64,7 +78,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       precioAcumulado += parseInt(precio);
       tiempoAcumulado += parseInt(tiempo);
     }
-  
+
     const reservaData = {
       nombre,
       apellido,
@@ -74,8 +88,8 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       tiempoAcumulado: sumaAcumulada.tiempo,
     };
 
-    console.log(reservaData)
-  
+    console.log(reservaData);
+
     try {
       const response = await fetch("/api/reserva/[id]", {
         method: "POST",
@@ -84,16 +98,16 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
         },
         body: JSON.stringify(reservaData),
       });
-  
+
       if (!response.ok) {
         const { message } = await response.json();
         throw new Error(message);
       }
-  
+
       const reservaGuardada = await response.json();
       console.log("Reserva guardada:", reservaGuardada);
       alert("¡Reserva exitosa!");
-  
+
       setSelecciones([]);
       e.target.reset();
     } catch (error) {
@@ -101,7 +115,14 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       alert("Error al guardar la reserva. Por favor, intenta nuevamente.");
     }
   };
-  
+
+  // Función para calcular el tiempo disponible entre dos horas en minutos
+  const calcularTiempoDisponible = (horaInicio, horaFin) => {
+    const startTime = parseISO(`2023-01-01T${horaInicio}`);
+    const endTime = parseISO(`2023-01-01T${horaFin}`);
+    const tiempoDisponible = (endTime - startTime) / 1000 / 60;
+    return tiempoDisponible;
+  };
 
   return (
     <form onSubmit={handleSubmit} style={{ width: "600px" }}>
@@ -117,14 +138,14 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
 
       <div>
         <label htmlFor="fechasDisponibles">Fechas disponibles:</label>
-        <select id="fechasDisponibles" name="fechasDisponibles" required>
+        <select id="fechasDisponiblesFecha" name="fechasDisponibles" required>
           <option value="">Selecciona una fecha</option>
           {fechasDisponibles.map((fecha) => (
             <option
               key={fecha._id}
-              value={`${formatDate(fecha.dia)}`}
+              value={`${format(parseISO(fecha.dia), "yyyy-MM-dd")}`}
             >
-              {`${formatDate(fecha.dia)}`}
+              {`${format(parseISO(fecha.dia), "dd-MM-yyyy")}`}
             </option>
           ))}
         </select>
@@ -149,25 +170,31 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
           ))}
         </select>
       </div>
+
       <div>
-        <label htmlFor="zonasDepilar">Horarios disponibles</label>
-        <select
-          id="zonasDepilar"
-          name="zonasDepilar"
-          required
-          onChange={handleSeleccion}
-        >
+        <label htmlFor="horariosDisponibles">
+          Horarios disponibles para las zonas seleccionadas:
+        </label>
+        <select id="horariosDisponibles" name="horariosDisponibles" required>
           <option value="">Selecciona un horario</option>
-          {zonasDepilar.map((zona) => (
-            <option
-              key={zona._id}
-              value={`${zona.zona} | ${zona.precio} | ${zona.tiempo}`}
-            >
-              {`${zona.zona} $${zona.precio} ${zona.tiempo}''`}
-            </option>
-          ))}
+          {horariosDisponibles.map((fecha) => {
+            const horaInicioParts = fecha.horaInicio.split(":");
+            const horaFinParts = fecha.horaFin.split(":");
+            const horaInicioFormatted = `${horaInicioParts[0]}:${horaInicioParts[1]}`;
+            const horaFinFormatted = `${horaFinParts[0]}:${horaFinParts[1]}`;
+
+            return (
+              <option
+                key={fecha._id}
+                value={`${horaInicioFormatted} a ${horaFinFormatted}`}
+              >
+                {`${horaInicioFormatted} a ${horaFinFormatted}`}
+              </option>
+            );
+          })}
         </select>
       </div>
+
       <div>
         <h3>Selecciones realizadas:</h3>
         <ul>
@@ -188,11 +215,5 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
     </form>
   );
 };
-
-// Función para formatear la fecha en "dd/mm/aaaa"
-function formatDate(dateString) {
-  const dateObj = new Date(dateString);
-  return dateObj.toLocaleDateString("es-ES");
-}
 
 export default Formulario;

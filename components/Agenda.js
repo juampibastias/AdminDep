@@ -43,31 +43,34 @@ const AgendaCalendar = ({ diasDisponibles }) => {
       <Link href="/adminDep">
         <span className="btn btn-primary btn-block mb-3">Volver</span>
       </Link>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(7, 1fr)",
-          gap: "10px",
-        }}
-      >
+      <div>
         {/* Renderizar las fechas */}
         {diasDisponibles.map((diaDisponible) => (
-          <div
-            key={diaDisponible._id}
-            style={{
-              border: "1px solid #ddd",
-              padding: "10px",
-              cursor: "pointer",
-              background:
-                expandedDay === diaDisponible._id ? "#f0f0f0" : "transparent",
-            }}
-            onClick={() => handleDayClick(diaDisponible._id)}
-          >
-            <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
-              {format(parseISO(diaDisponible.dia), "dd-MM-yyyy")}
+          <div key={diaDisponible._id} style={{ marginBottom: "10px" }}>
+            <div
+              style={{
+                border: "1px solid #ddd",
+                padding: "10px",
+                cursor: "pointer",
+                background:
+                  expandedDay === diaDisponible._id ? "#f0f0f0" : "transparent",
+              }}
+              onClick={() => handleDayClick(diaDisponible._id)}
+            >
+              <div style={{ fontWeight: "bold", marginBottom: "5px" }}>
+                {format(parseISO(diaDisponible.dia), "dd-MM-yyyy")}
+              </div>
             </div>
             {expandedDay === diaDisponible._id && (
-              <div>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(7, 1fr)",
+                  gap: "10px",
+                  border: "1px solid #ddd",
+                  padding: "10px",
+                }}
+              >
                 {generateTimeSlots(
                   diaDisponible.horaInicio,
                   diaDisponible.horaFin

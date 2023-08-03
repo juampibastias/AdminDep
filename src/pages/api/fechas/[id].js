@@ -14,11 +14,13 @@ export default async function handler(req, res) {
   } else if (req.method === "POST") {
     try {
       await connectToDatabase();
-      const { dia, horaInicio, horaFin } = req.body;
+      const { dia, horaInicio, horaFin, fraccionamientoArray } = req.body;
+      console.log(fraccionamientoArray)
       const nuevaFecha = new Fecha({
-        dia, 
-        horaInicio, 
-        horaFin
+        dia,
+        horaInicio,
+        horaFin,
+        fraccionamientoArray,
       });
       await nuevaFecha.save();
       return res.status(200).json({ message: "Fecha agregada correctamente" });
@@ -31,7 +33,7 @@ export default async function handler(req, res) {
       await connectToDatabase();
       const { id } = req.query;
 
-      console.log(req.query)
+      console.log(req.query);
 
       // Buscar y eliminar la fecha por su id
       console.log("Id a eliminar:", id);
@@ -44,7 +46,7 @@ export default async function handler(req, res) {
 
       return res.status(200).json({ message: "Fecha eliminada correctamente" });
     } catch (error) {
-      console.log("ID: ", id)
+      console.log("ID: ", id);
       console.error("Error al eliminar la fecha", error);
       return res.status(500).json({ message: "Error al eliminar la fecha" });
     }
