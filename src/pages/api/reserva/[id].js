@@ -28,6 +28,7 @@ export default async function handler(req, res) {
       zonasDepilar,
       precioAcumulado,
       tiempoAcumulado,
+      horariosSeleccionados,
     } = req.body;
 
     if (
@@ -51,6 +52,7 @@ export default async function handler(req, res) {
       zonasDepilar,
       precioAcumulado,
       tiempoAcumulado,
+      horariosSeleccionados,
     });
 
     // Guardar la reserva en la base de datos

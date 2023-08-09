@@ -21,10 +21,10 @@ const Home = ({ zonasDepilar, fechasDisponibles }) => {
             alt="Next.js Logo"
             width={100}
             height={100}
+            style={{marginTop: "20rem"}}
             priority
           />
-          <h1 className="text-red-400">TurnosDep</h1>
-          <h2 className="text-red-400">text</h2>
+          <h1>TurnosDep</h1>
         </div>
         <div>
           {" "}

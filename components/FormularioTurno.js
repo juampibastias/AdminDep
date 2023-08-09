@@ -1,10 +1,12 @@
+import { method } from "lodash";
 import React, { useState, useEffect } from "react";
 
 const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
   const [selecciones, setSelecciones] = useState([]);
   const [sumaAcumulada, setSumaAcumulada] = useState({ precio: 0, tiempo: 0 });
   const [horariosDisponibles, setHorariosDisponibles] = useState([]);
-  const [tiempoAcumuladoMinutos, setTiempoAcumuladoMinutos] = useState(0);
+  const [horariosSeleccionados, setHorariosSeleccionados] = useState([]);
+  const [horariosOcupados, setHorariosOcupados] = useState([]);
 
   useEffect(() => {
     const updateHorarios = async () => {
@@ -18,6 +20,33 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
     updateHorarios();
   }, [sumaAcumulada.tiempo, fechasDisponibles]);
 
+  useEffect(() => {
+    const obtenerHorariosOcupados = async () => {
+      try {
+        const response = await fetch("/api/reserva/[id]", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const horariosOcupados = data
+            .map((reserva) => reserva.horariosSeleccionados)
+            .flat();
+          setHorariosOcupados(horariosOcupados);
+        } else {
+          console.error("Error en la respuesta del servidor");
+        }
+      } catch (error) {
+        console.error("Error al obtener horarios ocupados", error);
+      }
+    };
+
+    obtenerHorariosOcupados();
+  }, []);
+
   const filtrarHorariosDisponibles = (horarios, tiempoAcumulado) => {
     const horariosFiltrados = [];
     const [horaInicioPrimera, minutosInicioPrimera] =
@@ -25,37 +54,53 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
     const [horaFinUltima, minutosFinUltima] =
       horarios[horarios.length - 1]?.split(":") || [];
 
-    // Convertimos la hora de inicio y fin en minutos para facilitar los cálculos
     const minutosInicioTotal =
       parseInt(horaInicioPrimera) * 60 + parseInt(minutosInicioPrimera);
     const minutosFinTotal =
       parseInt(horaFinUltima) * 60 + parseInt(minutosFinUltima);
 
-    // Si tiempoAcumulado es un número, lo convertimos a cadena
     const tiempoAcumuladoStr =
       typeof tiempoAcumulado === "number"
         ? tiempoAcumulado.toString()
         : tiempoAcumulado;
-
-    // Calculamos el tiempo acumulado necesario en minutos
     const tiempoAcumuladoMinutos = parseInt(tiempoAcumuladoStr.split(" ")[0]);
-    console.log(tiempoAcumuladoMinutos);
 
-    // Creamos una función para determinar si una franja horaria es válida para el tiempo acumulado
     const esFranjaValida = (inicio, fin) => {
       return (
         fin - inicio >= tiempoAcumuladoMinutos &&
         inicio >= minutosInicioTotal &&
         fin <= minutosFinTotal &&
-        fin <= 20 * 60 // 20:00 en minutos
+        fin <= 20 * 60
       );
     };
 
     let minutosInicio = minutosInicioTotal;
-    let minutosFin = minutosInicio + sumaAcumulada.tiempo;
+    let minutosFin = minutosInicio + tiempoAcumuladoMinutos;
 
     while (minutosFin <= minutosFinTotal && minutosFin <= 20 * 60) {
-      if (esFranjaValida(minutosInicio, minutosFin)) {
+      let franjaDisponible = true;
+
+      for (const horarioOcupado of horariosOcupados) {
+        const [horaOcupadaInicio, minutosOcupadosInicio] =
+          horarioOcupado.split(" ")[0]?.split(":") || [];
+        const [horaOcupadaFin, minutosOcupadosFin] =
+          horarioOcupado.split(" ")[2]?.split(":") || [];
+
+        const minutosOcupadosInicioTotal =
+          parseInt(horaOcupadaInicio) * 60 + parseInt(minutosOcupadosInicio);
+        const minutosOcupadosFinTotal =
+          parseInt(horaOcupadaFin) * 60 + parseInt(minutosOcupadosFin);
+
+        if (
+          minutosInicio >= minutosOcupadosInicioTotal &&
+          minutosInicio < minutosOcupadosFinTotal
+        ) {
+          franjaDisponible = false;
+          break;
+        }
+      }
+
+      if (franjaDisponible) {
         const horaInicio = Math.floor(minutosInicio / 60);
         const minutosInicioFraccion = minutosInicio % 60;
         const horaFin = Math.floor(minutosFin / 60);
@@ -70,11 +115,9 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
         horariosFiltrados.push(franjaHoraria);
       }
 
-      // Avanzamos al siguiente intervalo de tiempo utilizando sumaAcumulada.tiempo
       minutosInicio += sumaAcumulada.tiempo;
-      minutosFin = minutosInicio + sumaAcumulada.tiempo;
+      minutosFin = minutosInicio + tiempoAcumuladoMinutos;
 
-      // Asegurémonos de no entrar en un bucle infinito si sumaAcumulada.tiempo es 0
       if (sumaAcumulada.tiempo === 0) {
         break;
       }
@@ -94,6 +137,14 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
     }));
 
     setSelecciones((prevSelecciones) => [...prevSelecciones, zonaSeleccionada]);
+  };
+
+  const handleSeleccionHorarios = (e) => {
+    const horarioSeleccionado = e.target.value;
+    setHorariosSeleccionados((prevHorarios) => [
+      ...prevHorarios,
+      horarioSeleccionado,
+    ]);
   };
 
   const eliminarSeleccion = (index) => {
@@ -135,6 +186,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       zonasDepilar,
       precioAcumulado: sumaAcumulada.precio,
       tiempoAcumulado: sumaAcumulada.tiempo,
+      horariosSeleccionados: horariosSeleccionados,
     };
 
     console.log(reservaData);
@@ -159,6 +211,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
 
       setSelecciones([]);
       e.target.reset();
+      setSumaAcumulada({ precio: 0, tiempo: 0 });
     } catch (error) {
       console.error("Error al guardar la reserva", error);
       alert("Error al guardar la reserva. Por favor, intenta nuevamente.");
@@ -211,7 +264,12 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
 
       <div>
         <label htmlFor="horariosDisponibles">Horarios disponibles:</label>
-        <select id="horariosDisponibles" name="horariosDisponibles" required>
+        <select
+          id="horariosDisponibles"
+          name="horariosDisponibles"
+          required
+          onChange={handleSeleccionHorarios} // Usa la nueva función para horarios
+        >
           <option value="">Selecciona un horario</option>
           {horariosDisponibles.map((horario, index) => (
             <option key={index} value={horario}>
