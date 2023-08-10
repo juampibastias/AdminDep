@@ -5,7 +5,6 @@ import { connectToDatabase } from "../../utils/db";
 import Reserva from "../../models/reserva";
 
 const MyPage = ({ diasDisponibles, reservas }) => {
-  console.log(diasDisponibles, reservas)
   return (
     <div>
       <Agenda diasDisponibles={diasDisponibles} reservas = {reservas}/>

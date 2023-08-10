@@ -43,7 +43,7 @@ const AdminPage = () => {
         startDate.setTime(startDate.getTime() + fraccionamientoEnMilisegundos);
       }
 
-      console.log(fraccionamientoArray)
+      console.log(fraccionamientoArray);
 
       const response = await fetch("/api/fechas/[id]", {
         method: "POST",
@@ -103,7 +103,7 @@ const AdminPage = () => {
       <h1>Administración de Fechas</h1>
       <div className="col-md-4">
         <Link href="/adminDep">
-          <span className="btn btn-primary btn-block mb-3">Volver</span>
+          <span className="btn btn-primary btn-block mb-3 mt-3">Volver</span>
         </Link>
       </div>
       <form onSubmit={handleSubmit}>
@@ -148,7 +148,9 @@ const AdminPage = () => {
           />
         </div>
 
-        <button type="submit">Agregar Fecha</button>
+        <button className="btn btn-primary btn-block" type="submit">
+          Agregar Fecha
+        </button>
       </form>
       <div>
         <h2>Fechas guardadas:</h2>
@@ -158,10 +160,12 @@ const AdminPage = () => {
               {`${format(new Date(fecha.dia), "dd/MM/yyyy")} | Inicia: ${
                 fecha.horaInicio
               } Finaliza: ${fecha.horaFin}`}
-              <FaTrash
-                className="delete-icon"
+              <button
+                className="m-1 btn btn-primary btn-block"
                 onClick={() => handleDeleteFecha(fecha._id)}
-              />
+              >
+                <FaTrash />
+              </button>
             </li>
           ))}
         </ul>

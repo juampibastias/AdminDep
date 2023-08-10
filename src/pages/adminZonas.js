@@ -83,11 +83,11 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="" style={{ marginTop: "15rem" }}>
-      <h1 className="mt-5">Administración de Zonas a Depilar</h1>
+    <div>
+      <h1 className="mt-2" style={{textAlign: "center"}}>Administración de Zonas a Depilar</h1>
       <div className="col-md-4">
         <Link href="/adminDep">
-          <span className="btn btn-primary btn-block mb-3">Volver</span>
+          <span className="btn btn-primary btn-block mb-3 mt-3">Volver</span>
         </Link>
       </div>
       <form onSubmit={handleSubmit}>
@@ -124,7 +124,7 @@ const AdminPage = () => {
           />
         </div>
 
-        <button type="submit">Agregar Zona</button>
+        <button type="submit" className="btn btn-primary btn-block">Agregar Zona</button>
       </form>
 
       <div className="mt-5">
@@ -152,7 +152,7 @@ const AdminPage = () => {
                 <td>{zona.tiempo}</td>
                 <td>{zona.precio}</td>
                 <td>
-                  <button onClick={() => handleDelete(zona._id)}>
+                  <button className="btn btn-primary btn-block" onClick={() => handleDelete(zona._id)}>
                     <FaTrash />
                   </button>
                 </td>

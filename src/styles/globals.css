@@ -1,19 +1,11 @@
 html,
 body {
-  height: 100%;
   margin: 0;
 }
 
 body {
   display: flex;
   justify-content: center;
-  align-items: center;
-}
-
-/* Estilos para el contenedor principal del formulario */
-main {
-  display: flex;
-  flex-direction: column;
   align-items: center;
 }
 
@@ -66,4 +58,21 @@ h1 {
   margin-top: 10px;
   font-size: 24px;
   font-weight: bold;
+}
+
+/* Agrega un nuevo estilo para dispositivos móviles */
+@media (max-width: 768px) {
+  .reservas-content {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 20px;
+  }
+}
+
+@media (min-width: 769px) {
+  .reservas-content {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+  }
 }

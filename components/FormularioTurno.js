@@ -1,4 +1,3 @@
-import { method } from "lodash";
 import React, { useState, useEffect } from "react";
 
 const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
@@ -7,28 +6,36 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
   const [horariosDisponibles, setHorariosDisponibles] = useState([]);
   const [horariosSeleccionados, setHorariosSeleccionados] = useState([]);
   const [horariosOcupados, setHorariosOcupados] = useState([]);
+  const [fechaSeleccionada, setFechaSeleccionada] = useState(""); // Agregado: estado para la fecha seleccionada
 
   useEffect(() => {
     const updateHorarios = async () => {
-      const horarios = await filtrarHorariosDisponibles(
-        fechasDisponibles[0].fraccionamientoArray,
-        sumaAcumulada.tiempo
-      );
-      setHorariosDisponibles(horarios);
+      if (fechaSeleccionada) {
+        const horarios = await filtrarHorariosDisponibles(
+          fechasDisponibles.find(
+            (fecha) => formatDate(fecha.dia) === fechaSeleccionada
+          ).fraccionamientoArray,
+          sumaAcumulada.tiempo
+        );
+        setHorariosDisponibles(horarios);
+      }
     };
 
     updateHorarios();
-  }, [sumaAcumulada.tiempo, fechasDisponibles]);
+  }, [sumaAcumulada.tiempo, fechaSeleccionada]);
 
   useEffect(() => {
-    const obtenerHorariosOcupados = async () => {
+    const obtenerHorariosOcupados = async (fechaSeleccionada) => {
       try {
-        const response = await fetch("/api/reserva/[id]", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await fetch(
+          `/api/reserva/[id]?fecha=${fechaSeleccionada}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
 
         if (response.ok) {
           const data = await response.json();
@@ -44,8 +51,8 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       }
     };
 
-    obtenerHorariosOcupados();
-  }, []);
+    obtenerHorariosOcupados(fechaSeleccionada);
+  }, [fechaSeleccionada]);
 
   const filtrarHorariosDisponibles = (horarios, tiempoAcumulado) => {
     const horariosFiltrados = [];
@@ -92,8 +99,10 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
           parseInt(horaOcupadaFin) * 60 + parseInt(minutosOcupadosFin);
 
         if (
-          minutosInicio >= minutosOcupadosInicioTotal &&
-          minutosInicio < minutosOcupadosFinTotal
+          (minutosInicio >= minutosOcupadosInicioTotal &&
+            minutosInicio < minutosOcupadosFinTotal) ||
+          (minutosFin > minutosOcupadosInicioTotal &&
+            minutosFin <= minutosOcupadosFinTotal)
         ) {
           franjaDisponible = false;
           break;
@@ -189,8 +198,6 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       horariosSeleccionados: horariosSeleccionados,
     };
 
-    console.log(reservaData);
-
     try {
       const response = await fetch("/api/reserva/[id]", {
         method: "POST",
@@ -206,7 +213,6 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
       }
 
       const reservaGuardada = await response.json();
-      console.log("Reserva guardada:", reservaGuardada);
       alert("¡Reserva exitosa!");
 
       setSelecciones([]);
@@ -232,11 +238,16 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
 
       <div>
         <label htmlFor="fechasDisponibles">Fechas disponibles:</label>
-        <select id="fechasDisponibles" name="fechasDisponibles" required>
+        <select
+          id="fechasDisponibles"
+          name="fechasDisponibles"
+          required
+          onChange={(e) => setFechaSeleccionada(e.target.value)}
+        >
           <option value="">Selecciona una fecha</option>
           {fechasDisponibles.map((fecha) => (
-            <option key={fecha._id} value={`${formatDate(fecha.dia)}`}>
-              {`${formatDate(fecha.dia)}`}
+            <option key={fecha._id} value={formatDate(fecha.dia)}>
+              {formatDate(fecha.dia)}
             </option>
           ))}
         </select>
@@ -297,7 +308,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
         <p>Tiempo total: {sumaAcumulada.tiempo}''</p>
       </div>
 
-      <button type="submit">Reservar</button>
+      <button className="btn btn-primary btn-block" type="submit">Reservar</button>
     </form>
   );
 };
