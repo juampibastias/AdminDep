@@ -14,13 +14,11 @@ export default async function handler(req, res) {
   } else if (req.method === "POST") {
     try {
       await connectToDatabase();
-      const { dia, horaInicio, horaFin, fraccionamientoArray } = req.body;
-      console.log(fraccionamientoArray)
+      const { dia, horaInicio, horaFin } = req.body;
       const nuevaFecha = new Fecha({
         dia,
         horaInicio,
         horaFin,
-        fraccionamientoArray,
       });
       await nuevaFecha.save();
       return res.status(200).json({ message: "Fecha agregada correctamente" });

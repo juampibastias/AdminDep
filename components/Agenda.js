@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 
-const AgendaCalendar = ({ diasDisponibles, reservas }) => {
-  console.log(reservas);
+const AgendaCalendar = ({ reservas }) => {
+  console.log(reservas)
   const [selectedDate, setSelectedDate] = useState(null);
   const reservasPorFecha = {};
 
@@ -11,7 +11,7 @@ const AgendaCalendar = ({ diasDisponibles, reservas }) => {
   reservas.forEach((reserva) => {
     const [dia, mes, anio] = reserva.fechaDisponible.split("/");
     const fechaDisponible = new Date(`${anio}-${mes}-${dia}`);
-    const fechaKey = format(fechaDisponible, "yyyy-MM-dd");
+    const fechaKey = format(fechaDisponible, "MM-dd-yyyy");
 
     if (!reservasPorFecha[fechaKey]) {
       reservasPorFecha[fechaKey] = [];
@@ -22,6 +22,7 @@ const AgendaCalendar = ({ diasDisponibles, reservas }) => {
 
   // Ordenar las reservas por horario en cada fecha
   Object.keys(reservasPorFecha).forEach((fechaKey) => {
+    console.log(fechaKey);
     reservasPorFecha[fechaKey].sort((a, b) => {
       const horarioA = a.horariosSeleccionados[0];
       const horarioB = b.horariosSeleccionados[0];
@@ -66,11 +67,12 @@ const AgendaCalendar = ({ diasDisponibles, reservas }) => {
         <div key={fechaKey} style={{ marginBottom: "20px" }}>
           <h3>{format(new Date(fechaKey), "dd-MM-yyyy")}</h3>
           {selectedDate === fechaKey && (
-            <div className="reservas-content"
+            <div
+              className="reservas-content"
               style={{
                 marginTop: "20px",
                 display: "grid",
-                gridTemplateColumns: "repeat(6, 1fr)", // Columnas para la versión web
+                gridTemplateColumns: "repeat(5, 1fr)", // Columnas para la versión web
                 gap: "20px",
               }}
             >
@@ -86,14 +88,20 @@ const AgendaCalendar = ({ diasDisponibles, reservas }) => {
                     display: "flex",
                     flexDirection: "column",
                     justifyContent: "space-between",
-                    textAlign: "center"
+                    textAlign: "center",
                   }}
                 >
                   <div style={{ fontSize: "16px", fontWeight: "bold" }}>
                     {reserva.horariosSeleccionados}
                   </div>
                   <div>{`${reserva.nombre} ${reserva.apellido}`}</div>
-                  <div style={{ fontSize: "15px", fontWeight: "600", color: "white" }}>
+                  <div
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: "600",
+                      color: "white",
+                    }}
+                  >
                     {reserva.zonasDepilar.map((zonaDepilar, index) => (
                       <React.Fragment key={index}>
                         {zonaDepilar.split(" | ")[0]}
@@ -119,7 +127,6 @@ const AgendaCalendar = ({ diasDisponibles, reservas }) => {
         </div>
       ))}
     </div>
-    
   );
 };
 

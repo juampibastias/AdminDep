@@ -4,19 +4,19 @@ import Reserva from "../../../../models/reserva";
 export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
-      await connectToDatabase(); // Conexión a la base de datos
+      await connectToDatabase();
 
-      // Buscar todas las reservas en la base de datos
-      const reservas = await Reserva.find({});
+      // Obtener la fecha de la solicitud
+      const { fecha } = req.query;
+
+      // Buscar las reservas que coincidan con la fecha
+      const reservas = await Reserva.find({ fechaDisponible: fecha });
 
       return res.status(200).json(reservas);
     } catch (error) {
       console.error("Error al obtener las reservas", error);
       return res.status(500).json({ message: "Error al obtener las reservas" });
     }
-  } else if (req.method !== "POST") {
-    // Asegurarse de que solo se acepten solicitudes POST
-    return res.status(405).json({ message: "Método no permitido" });
   }
 
   try {

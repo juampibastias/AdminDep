@@ -6,18 +6,24 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
   const [horariosDisponibles, setHorariosDisponibles] = useState([]);
   const [horariosSeleccionados, setHorariosSeleccionados] = useState([]);
   const [horariosOcupados, setHorariosOcupados] = useState([]);
-  const [fechaSeleccionada, setFechaSeleccionada] = useState(""); // Agregado: estado para la fecha seleccionada
+  const [fechaSeleccionada, setFechaSeleccionada] = useState("");
 
   useEffect(() => {
     const updateHorarios = async () => {
       if (fechaSeleccionada) {
-        const horarios = await filtrarHorariosDisponibles(
-          fechasDisponibles.find(
-            (fecha) => formatDate(fecha.dia) === fechaSeleccionada
-          ).fraccionamientoArray,
-          sumaAcumulada.tiempo
+        const selectedDate = fechasDisponibles.find(
+          (fecha) => formatDate(fecha.dia) === fechaSeleccionada
         );
-        setHorariosDisponibles(horarios);
+
+        if (selectedDate) {
+          setHorariosOcupados([]); // Limpiar horarios ocupados al cambiar la fecha
+          const horarios = await filtrarHorariosDisponibles(
+            selectedDate.horaInicio,
+            selectedDate.horaFin,
+            sumaAcumulada.tiempo
+          );
+          setHorariosDisponibles(horarios);
+        }
       }
     };
 
@@ -25,41 +31,49 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
   }, [sumaAcumulada.tiempo, fechaSeleccionada]);
 
   useEffect(() => {
-    const obtenerHorariosOcupados = async (fechaSeleccionada) => {
-      try {
-        const response = await fetch(
-          `/api/reserva/[id]?fecha=${fechaSeleccionada}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          const horariosOcupados = data
-            .map((reserva) => reserva.horariosSeleccionados)
-            .flat();
-          setHorariosOcupados(horariosOcupados);
-        } else {
-          console.error("Error en la respuesta del servidor");
-        }
-      } catch (error) {
-        console.error("Error al obtener horarios ocupados", error);
-      }
-    };
-
-    obtenerHorariosOcupados(fechaSeleccionada);
+    if (fechaSeleccionada) {
+      obtenerHorariosOcupados(fechaSeleccionada);
+    }
   }, [fechaSeleccionada]);
 
-  const filtrarHorariosDisponibles = (horarios, tiempoAcumulado) => {
+  const obtenerHorariosOcupados = async (fecha) => {
+    try {
+      const response = await fetch(`/api/reserva/[id]?fecha=${fecha}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const horariosOcupados = data.flatMap(
+          (reserva) => reserva.horariosSeleccionados
+        ); // Usa flatMap para simplificar
+        setHorariosOcupados(horariosOcupados);
+      } else {
+        console.error("Error en la respuesta del servidor");
+      }
+    } catch (error) {
+      console.error("Error al obtener horarios ocupados", error);
+    }
+    console.log("Horarios Ocupados", horariosOcupados);
+  };
+
+  useEffect(() => {
+    console.log("Horarios Ocupados actualizados:", horariosOcupados);
+  }, [horariosOcupados]);
+
+  const filtrarHorariosDisponibles = async (
+    horaInicio,
+    horaFin,
+    tiempoAcumulado
+  ) => {
+    await obtenerHorariosOcupados(fechaSeleccionada);
     const horariosFiltrados = [];
     const [horaInicioPrimera, minutosInicioPrimera] =
-      horarios[0]?.split(":") || [];
-    const [horaFinUltima, minutosFinUltima] =
-      horarios[horarios.length - 1]?.split(":") || [];
+      horaInicio.split(":") || [];
+    const [horaFinUltima, minutosFinUltima] = horaFin.split(":") || [];
 
     const minutosInicioTotal =
       parseInt(horaInicioPrimera) * 60 + parseInt(minutosInicioPrimera);
@@ -87,24 +101,28 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
     while (minutosFin <= minutosFinTotal && minutosFin <= 20 * 60) {
       let franjaDisponible = true;
 
-      for (const horarioOcupado of horariosOcupados) {
-        const [horaOcupadaInicio, minutosOcupadosInicio] =
-          horarioOcupado.split(" ")[0]?.split(":") || [];
-        const [horaOcupadaFin, minutosOcupadosFin] =
-          horarioOcupado.split(" ")[2]?.split(":") || [];
+      for (let min = minutosInicio; min < minutosFin; min++) {
+        for (const horarioOcupado of horariosOcupados) {
+          const [horaOcupadaInicio, minutosOcupadosInicio] =
+            horarioOcupado.split(" ")[0]?.split(":") || [];
+          const [horaOcupadaFin, minutosOcupadosFin] =
+            horarioOcupado.split(" ")[2]?.split(":") || [];
 
-        const minutosOcupadosInicioTotal =
-          parseInt(horaOcupadaInicio) * 60 + parseInt(minutosOcupadosInicio);
-        const minutosOcupadosFinTotal =
-          parseInt(horaOcupadaFin) * 60 + parseInt(minutosOcupadosFin);
+          const minutosOcupadosInicioTotal =
+            parseInt(horaOcupadaInicio) * 60 + parseInt(minutosOcupadosInicio);
+          const minutosOcupadosFinTotal =
+            parseInt(horaOcupadaFin) * 60 + parseInt(minutosOcupadosFin);
 
-        if (
-          (minutosInicio >= minutosOcupadosInicioTotal &&
-            minutosInicio < minutosOcupadosFinTotal) ||
-          (minutosFin > minutosOcupadosInicioTotal &&
-            minutosFin <= minutosOcupadosFinTotal)
-        ) {
-          franjaDisponible = false;
+          if (
+            min >= minutosOcupadosInicioTotal &&
+            min < minutosOcupadosFinTotal
+          ) {
+            franjaDisponible = false;
+            break;
+          }
+        }
+
+        if (!franjaDisponible) {
           break;
         }
       }
@@ -131,6 +149,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
         break;
       }
     }
+    console.log("horariosfiltrados", horariosFiltrados);
 
     return horariosFiltrados;
   };
@@ -214,7 +233,7 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
 
       const reservaGuardada = await response.json();
       alert("¡Reserva exitosa!");
-
+      setHorariosSeleccionados([]);
       setSelecciones([]);
       e.target.reset();
       setSumaAcumulada({ precio: 0, tiempo: 0 });
@@ -308,7 +327,9 @@ const Formulario = ({ zonasDepilar, fechasDisponibles }) => {
         <p>Tiempo total: {sumaAcumulada.tiempo}''</p>
       </div>
 
-      <button className="btn btn-primary btn-block" type="submit">Reservar</button>
+      <button className="btn btn-primary btn-block" type="submit">
+        Reservar
+      </button>
     </form>
   );
 };

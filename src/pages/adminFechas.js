@@ -7,7 +7,6 @@ const AdminPage = () => {
   const [dia, setDia] = useState("");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFin, setHoraFin] = useState("");
-  const [fraccionamiento, setFraccionamiento] = useState("15");
   const [fechasGuardadas, setFechasGuardadas] = useState([]);
 
   useEffect(() => {
@@ -25,26 +24,6 @@ const AdminPage = () => {
     e.preventDefault();
 
     try {
-      // Calcular el fraccionamiento de horas
-      const intervaloEnMinutos = parseInt(fraccionamiento, 10);
-      const fraccionamientoEnMilisegundos = intervaloEnMinutos * 60000;
-      const startDate = new Date(`${dia}T${horaInicio}`);
-      const endDate = new Date(`${dia}T${horaFin}`);
-
-      const fraccionamientoArray = [];
-      while (startDate <= endDate) {
-        fraccionamientoArray.push(
-          startDate.toLocaleTimeString("en-GB", {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false,
-          })
-        );
-        startDate.setTime(startDate.getTime() + fraccionamientoEnMilisegundos);
-      }
-
-      console.log(fraccionamientoArray);
-
       const response = await fetch("/api/fechas/[id]", {
         method: "POST",
         headers: {
@@ -54,7 +33,6 @@ const AdminPage = () => {
           dia,
           horaInicio,
           horaFin,
-          fraccionamientoArray,
         }),
       });
 
@@ -137,23 +115,12 @@ const AdminPage = () => {
             required
           />
         </div>
-        <div>
-          <label htmlFor="fraccionamiento">Fraccionamiento en minutos:</label>
-          <input
-            type="number"
-            id="fraccionamiento"
-            value={fraccionamiento}
-            onChange={(e) => setFraccionamiento(e.target.value)}
-            required
-          />
-        </div>
-
         <button className="btn btn-primary btn-block" type="submit">
           Agregar Fecha
         </button>
       </form>
       <div>
-        <h2>Fechas guardadas:</h2>
+        <h2 className="mt-5">Fechas guardadas:</h2>
         <ul>
           {fechasGuardadas.map((fecha) => (
             <li key={fecha._id}>
